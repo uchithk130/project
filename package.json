@@ -9,9 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.669.0",
+    "@aws-sdk/client-s3": "^3.669.0",
+    "@aws-sdk/client-textract": "^3.669.0",
+    "aws-sdk": "^2.1691.0",
+    "next": "14.2.15",
     "react": "^18",
-    "react-dom": "^18",
-    "next": "14.2.15"
+    "react-dom": "^18"
   },
   "devDependencies": {
     "postcss": "^8",
