@@ -1,20 +1,16 @@
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
-
-const dynamoDB = new DynamoDBClient({ region: "us-east-1" });
+import connection from '../../utils/db';
 
 export async function POST(req) {
-  const { jobID, description } = await req.json();
+  const { jobTitle, description, eligibility_criteria, lastDateToApply } = await req.json();
 
   try {
-    // Store job description in DynamoDB
-    const params = {
-      TableName: "JobTable",
-      Item: {
-        jobID: { S: jobID },
-        description: { S: description },
-      },
-    };
-    await dynamoDB.send(new PutItemCommand(params));
+    const insertJobQuery = `
+      INSERT INTO Jobs (job_title, job_description, eligibility_criteria, last_date_to_apply)
+      VALUES (?, ?, ?, ?)
+    `;
+    
+    const values = [jobTitle, description, eligibility_criteria, lastDateToApply];
+    await connection.query(insertJobQuery, values);
 
     return new Response(JSON.stringify({ message: 'Job added successfully' }), { status: 200 });
   } catch (error) {
