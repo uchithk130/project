@@ -1,82 +1,97 @@
-// import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-// import { TextractClient, StartDocumentTextDetectionCommand } from "@aws-sdk/client-textract";
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { NextResponse } from 'next/server';
+import connection from '@/app/utils/db';
 
-// const s3 = new S3Client({ region: "us-east-1" });
-// const textract = new TextractClient({ region: "us-east-1" });
-
-// export async function POST(req) {
-//   const formData = await req.formData();
-//   const name = formData.get('name');
-//   const photo = formData.get('photo');
-//   const resume = formData.get('resume');
-
-//   try {
-//     // Convert the photo to a Buffer
-//     const photoArrayBuffer = await photo.arrayBuffer();
-//     const photoBuffer = Buffer.from(photoArrayBuffer);
-
-//     // Upload photo to S3
-//     const photoParams = {
-//       Bucket: "uchith",
-//       Key: `${name}.jpg`,
-//       Body: photoBuffer,
-//       ContentType: 'image/jpeg',
-//     };
-//     await s3.send(new PutObjectCommand(photoParams));
-
-//     // Convert the resume to a Buffer
-//     const resumeArrayBuffer = await resume.arrayBuffer();
-//     const resumeBuffer = Buffer.from(resumeArrayBuffer);
-
-//     // Upload resume to S3
-//     const resumeParams = {
-//       Bucket: "uchith",
-//       Key: `${name}.pdf`,
-//       Body: resumeBuffer,
-//       ContentType: 'application/pdf',
-//     };
-//     await s3.send(new PutObjectCommand(resumeParams));
-
-//     // Optionally parse the resume using AWS Textract
-//     const textractParams = {
-//       DocumentLocation: {
-//         S3Object: {
-//           Bucket: "uchith",
-//           Name: `${name}.pdf`,
-//         },
-//       },
-//     };
-//     await textract.send(new StartDocumentTextDetectionCommand(textractParams));
-
-//     return new Response(JSON.stringify({ message: 'Success' }), { status: 200 });
-//   } catch (error) {
-//     console.error("Error occurred:", error);
-//     return new Response(JSON.stringify({ error: 'Something went wrong' }), { status: 500 });
-//   }
-// }
-import { db } from "../../utils/db"; // Ensure this imports your DB connection setup
+// Initialize AWS S3 v3 client
+const s3Client = new S3Client({
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
 export async function POST(req) {
   try {
-    const { userId, email } = await req.json();
+    const body = await req.json();
+    const {
+      candidateName,
+      email,
+      password,
+      company,
+      highestEducation,
+      collegeName,
+      address,
+      interestDomains,
+      resume, // base64 encoded
+      resumeName,
+      resumeType,
+      photo, // base64 encoded
+      photoName,
+      photoType,
+    } = body;
 
-    // Check if the candidate already exists
-    const existingCandidate = await db.query(
-      "SELECT * FROM candidates WHERE user_id = $1",
-      [userId]
+    // Convert base64 strings to Buffers if resume and photo are provided
+    const resumeBuffer = resume ? Buffer.from(resume, 'base64') : null;
+    const photoBuffer = photo ? Buffer.from(photo, 'base64') : null;
+
+    // Upload resume and photo to S3 (only if provided)
+    const uploadToS3 = async (fileBuffer, fileName, folder, contentType) => {
+      if (!fileBuffer || !fileName) return null;
+      const uploadParams = {
+        Bucket: "uchith",
+        Key: `${folder}/${fileName}`,
+        Body: fileBuffer,
+        ContentType: contentType,
+        ACL: 'public-read',
+      };
+
+      const command = new PutObjectCommand(uploadParams);
+      await s3Client.send(command);
+      return `https://${uploadParams.Bucket}.s3.amazonaws.com/${uploadParams.Key}`;
+    };
+
+    const resumeUrl = await uploadToS3(resumeBuffer, resumeName, 'resumes', resumeType);
+    const photoUrl = await uploadToS3(photoBuffer, photoName, 'photos', photoType);
+
+    // Ensure fields are not undefined, empty strings are replaced with null
+    const safeValues = {
+      candidateName: candidateName || null,
+      email: email || null,
+      password: password || "",
+      company: company || null,
+      resumeUrl: resumeUrl || null,
+      photoUrl: photoUrl || null,
+      highestEducation: highestEducation || null,
+      collegeName: collegeName || null,
+      address: address || null,
+      interestDomains: interestDomains || null,
+    };
+
+    // Insert candidate information into MySQL database
+    const [result] = await connection.execute(
+      `INSERT INTO Candidates (name, email, password, company, resume_link, photo_link, highest_education, college_name, address, interest_domains)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        safeValues.candidateName,
+        safeValues.email,
+        safeValues.password,
+        safeValues.company,
+        safeValues.resumeUrl,
+        safeValues.photoUrl,
+        safeValues.highestEducation,
+        safeValues.collegeName,
+        safeValues.address,
+        safeValues.interestDomains,
+      ]
     );
 
-    if (existingCandidate.rows.length === 0) {
-      // Insert new candidate entry
-      await db.query(
-        "INSERT INTO Candidates (user_id, email) VALUES ($1, $2)",
-        [userId, email]
-      );
-      return new Response(JSON.stringify({ message: "Candidate created" }), { status: 201 });
-    } else {
-      return new Response(JSON.stringify({ message: "Candidate already exists" }), { status: 200 });
-    }
+    return NextResponse.json({
+      message: 'Candidate registered successfully',
+      candidateId: result.insertId,
+    });
   } catch (error) {
-    return new Response(JSON.stringify({ message: "Error creating candidate", error }), { status: 500 });
+    console.error('Error:', error);
+    return NextResponse.json({ error: 'Failed to register candidate' }, { status: 500 });
   }
 }
