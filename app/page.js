@@ -4,19 +4,6 @@ import { useState } from 'react';
 import { useRouter } from "next/navigation";
 import ProctoringWidget from './components/ProctoringWidget';
 
-// export default function InterviewPage() {
-//   const [matchStatus, setMatchStatus] = useState('');
-
-//   return (
-//     <div>
-//       <h1>Interview in Progress</h1>
-//       <ProctoringWidget setMatchStatus={setMatchStatus} />
-//     </div>
-//   );
-// }
-
-
-
 export default function Home() {
   const [matchStatus, setMatchStatus] = useState('');
   const router = useRouter();
