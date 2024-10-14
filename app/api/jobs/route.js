@@ -3,7 +3,7 @@ import connection from '../../utils/db';
 
 export async function GET() {
   try {
-    const query = 'SELECT job_id, job_title, last_date_to_apply FROM Jobs';
+    const query = 'SELECT * FROM Jobs';
     const [jobs] = await connection.query(query);
 
     return NextResponse.json(jobs);

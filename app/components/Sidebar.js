@@ -38,10 +38,10 @@ function Sidebar() {
               </Link>
             </li>
             <li>
-              <Link href="/get-campaign" legacyBehavior>
+              <Link href="/jobs" legacyBehavior>
                 <a
-                  onClick={() => handleLinkClick('/get-campaign')}
-                  className={`block py-2 px-3 border-l-4 ${activePath === '/get-campaign' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
+                  onClick={() => handleLinkClick('/jobs')}
+                  className={`block py-2 px-3 border-l-4 ${activePath === '/jobs' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
                 >
                   Jobs
                 </a>
