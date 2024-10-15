@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { NextResponse } from 'next/server';
 import connection from '@/app/utils/db';
+import nodemailer from 'nodemailer';
 
 // Initialize AWS S3 v3 client
 const s3Client = new S3Client({
@@ -10,6 +11,36 @@ const s3Client = new S3Client({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
 });
+
+// Initialize Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // You can use any email service like SendGrid, or Mailgun.
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// Function to send an email
+// Function to send an email
+const sendRegistrationEmail = async (email, candidateName) => {
+  const mailOptions = {
+    from: '"Interview Automation" <interviewautomation35@gmail.com>', // Replace with your email address
+    to: email,
+    subject: 'Thank You for Registering with Interview Automation!',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
+        <h2 style="color: #4CAF50;">Thank You for Registering!</h2>
+        <p>Dear <strong>${candidateName}</strong>,</p>
+        <p>Thank you for registering with <strong>Interview Automation</strong>. We noticed that you have a lot of skills, and based on your profile, you will receive personalized job recommendations.</p>
+        <p>We wish you all the best for your future interviews!</p>
+        <p style="margin-top: 20px;">Best Regards,<br/>The Interview Automation Team</p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
+};
 
 export async function POST(req) {
   try {
@@ -86,8 +117,11 @@ export async function POST(req) {
       ]
     );
 
+    // Send confirmation email
+    await sendRegistrationEmail(email, candidateName, company, resumeUrl);
+
     return NextResponse.json({
-      message: 'Candidate registered successfully',
+      message: 'Candidate registered successfully and email sent',
       candidateId: result.insertId,
     });
   } catch (error) {

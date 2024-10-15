@@ -33,7 +33,27 @@ function Sidebar() {
                   onClick={() => handleLinkClick('/admin')}
                   className={`block py-2 px-3 border-l-4 ${activePath === '/admin' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
                 >
-                  Dashboard
+                  Admin Registration
+                </a>
+              </Link>
+            </li>
+            <li>
+              <Link href="/candidate" legacyBehavior>
+                <a
+                  onClick={() => handleLinkClick('/candidate')}
+                  className={`block py-2 px-3 border-l-4 ${activePath === '/candidate' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
+                >
+                  Candidate Registration
+                </a>
+              </Link>
+            </li>
+            <li>
+              <Link href="/jobadd" legacyBehavior>
+                <a
+                  onClick={() => handleLinkClick('/jobadd')}
+                  className={`block py-2 px-3 border-l-4 ${activePath === '/jobadd' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
+                >
+                  Add New Job
                 </a>
               </Link>
             </li>
@@ -48,62 +68,42 @@ function Sidebar() {
               </Link>
             </li>
             <li>
-              <Link href="/update-campaign" legacyBehavior>
+              <Link href="/myapplications" legacyBehavior>
                 <a
-                  onClick={() => handleLinkClick('/update-campaign')}
-                  className={`block py-2 px-3 border-l-4 ${activePath === '/update-campaign' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
+                  onClick={() => handleLinkClick('/myapplications')}
+                  className={`block py-2 px-3 border-l-4 ${activePath === '/myapplications' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
                 >
-                  Update Resume
+                  My Applications
                 </a>
               </Link>
             </li>
             <li>
-              <Link href="/make-call" legacyBehavior>
+              <Link href="/resume" legacyBehavior>
                 <a
-                  onClick={() => handleLinkClick('/make-call')}
-                  className={`block py-2 px-3 border-l-4 ${activePath === '/make-call' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
+                  onClick={() => handleLinkClick('/Resume')}
+                  className={`block py-2 px-3 border-l-4 ${activePath === '/Resume' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
                 >
-                  Previous Applications
+                  Resume
                 </a>
               </Link>
             </li>
             <li>
-              <Link href="/call-status" legacyBehavior>
+              <Link href="/scheduling" legacyBehavior>
                 <a
-                  onClick={() => handleLinkClick('/call-status')}
-                  className={`block py-2 px-3 border-l-4 ${activePath === '/call-status' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
+                  onClick={() => handleLinkClick('/scheduling')}
+                  className={`block py-2 px-3 border-l-4 ${activePath === '/scheduling' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
                 >
-                  updare
+                 Scheduling
                 </a>
               </Link>
             </li>
             <li>
-              <Link href="/get-transcription" legacyBehavior>
+              <Link href="/Interview" legacyBehavior>
                 <a
-                  onClick={() => handleLinkClick('/get-transcription')}
-                  className={`block py-2 px-3 border-l-4 ${activePath === '/get-transcription' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
-                >
-                  Get Transcription
-                </a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/get-post-call-analysis" legacyBehavior>
-                <a
-                  onClick={() => handleLinkClick('/get-post-call-analysis')}
-                  className={`block py-2 px-3 border-l-4 ${activePath === '/get-post-call-analysis' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
-                >
-                  Post Call Analysis
-                </a>
-              </Link>
-            </li>
-            <li>
-              <Link href="/analytics" legacyBehavior>
-                <a
-                  onClick={() => handleLinkClick('/analytics')}
+                  onClick={() => handleLinkClick('/Interview')}
                   className={`block py-2 px-3 border-l-4 ${activePath === '/analytics' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
                 >
-                  Analysis
+                  Interview
                 </a>
               </Link>
             </li>

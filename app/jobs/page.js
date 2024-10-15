@@ -26,7 +26,7 @@ export default function Jobs() {
   }, []);
 
   // Get unique company names for the dropdown
-  const companyNames = Array.from(new Set(jobs.map(job => job.company_name)));
+  const companyNames = Array.from(new Set(jobs.map(job => job.company)));
   console.log(companyNames); // Debugging: Inspect unique company names
 
   // Filter jobs based on selected company and active status
@@ -35,7 +35,7 @@ export default function Jobs() {
 
     // Filter by selected company
     if (selectedCompany) {
-      updatedJobs = updatedJobs.filter(job => job.company_name === selectedCompany);
+      updatedJobs = updatedJobs.filter(job => job.company === selectedCompany);
     }
 
     // Filter by active status

@@ -1,19 +1,11 @@
 // app/success/page.js
 "use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+
 
 export default function SuccessPage() {
-  const router = useRouter();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      // Navigate away after some time or implement any other logic
-      router.push("/candidate"); // Redirect to homepage or any other page after 3 seconds
-    }, 3000); // Wait for 3 seconds before redirecting
 
-    return () => clearTimeout(timer);
-  }, [router]);
+
 
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
