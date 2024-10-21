@@ -8,7 +8,7 @@ import { ClipLoader } from "react-spinners"; // Import ClipLoader from react-spi
 export default function CandidateRegistration() {
   const router = useRouter();
   const [candidateName, setCandidateName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] =  useState('');
   const [password, setPassword] = useState('');
   const [company, setCompany] = useState('');
   const [resume, setResume] = useState(null);
@@ -147,7 +147,7 @@ export default function CandidateRegistration() {
                 className="w-full py-3 pl-4 border border-gray-300 rounded-lg bg-gray-50"
               />
             </div>
-          </div>
+          </div> 
 
           <div className="flex flex-wrap -mx-4">
             <div className="flex-1 px-4">

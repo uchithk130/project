@@ -1,85 +1,115 @@
-import connection from '../../utils/db';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { NextResponse } from 'next/server';
+import connection from '@/app/utils/db';
 import nodemailer from 'nodemailer';
 
-// Function to send a confirmation email
-const sendApplicationEmail = async (candidateName, email, jobTitle) => {
-  // Create a transporter object using your email provider's SMTP settings
-  const transporter = nodemailer.createTransport({
-    service: 'gmail', // You can use Gmail, or any other email service
-    auth: {
-      user: process.env.EMAIL_USER, // Your email address
-      pass: process.env.EMAIL_PASS,  // Your email password or app-specific password
-    },
-  });
+// Initialize AWS S3 client
+const s3Client = new S3Client({
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
+});
 
-  // Email content
+// Initialize Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// Function to send an email after application submission
+const sendApplicationEmail = async (email, jobTitle) => {
   const mailOptions = {
-    from: '"Interview Automation" <interviewautomation35@gmail.com>', // Sender address
-    to: email, // Candidate's email
-    subject: 'Job Application Submitted',
+    from: '"Interview Automation" <interviewautomation35@gmail.com>',
+    to: email,
+    subject: `Application Received: ${jobTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background-color: #f9f9f9;">
         <h2 style="color: #4CAF50;">Application Received</h2>
-        <p>Dear <strong>${candidateName}</strong>,</p>
-        <p>Thank you for applying for the job: <strong>${jobTitle}</strong>. Your application has been successfully submitted.</p>
-        <p style="margin-top: 20px;">Best regards,<br/>The Interview Automation Team</p>
-        <p>If you did not apply for this job or believe this email was sent to you in error, please contact our support team at interviewautomation35@gmail.com.</p>
+        <p>Dear ${email},</p>
+        <p>Thank you for applying for the position of <strong>${jobTitle}</strong>. We will review your application and get back to you soon.</p>
+        <p style="margin-top: 20px;">Best Regards,<br/>The Interview Automation Team</p>
       </div>
     `,
   };
 
-  // Send the email
   await transporter.sendMail(mailOptions);
 };
 
+// Function to upload files to S3
+const uploadFileToS3 = async (fileBuffer, fileName, folder, contentType) => {
+  if (!fileBuffer || !fileName) return null;
+  
+  const uploadParams = {
+    Bucket: "uchith",
+    Key: `${folder}/${fileName}`,
+    Body: fileBuffer,
+    ContentType: contentType,
+    ACL: 'public-read',
+  };
+
+  const command = new PutObjectCommand(uploadParams);
+  await s3Client.send(command);
+
+  return `https://${uploadParams.Bucket}.s3.amazonaws.com/${uploadParams.Key}`;
+};
+
 export async function POST(req) {
-  const { email, jobId, resumeLink, photoLink, candidateName } = await req.json();
-
   try {
-    // Update candidate information in the Candidates table using email
-    const updateCandidateQuery = `
-      UPDATE Candidates 
-      SET resume_link = ?, photo_link = ? 
-      WHERE email = ?
-    `;
-    const updateValues = [resumeLink, photoLink, email];
-    await connection.query(updateCandidateQuery, updateValues);
+    const body = await req.json();
+    const { email, jobId, resumeBase64, resumeName, resumeType, photoBase64, photoName, photoType } = body;
 
-    // Get candidate ID after updating their information
-    const candidateQuery = `
-      SELECT candidate_id FROM Candidates WHERE email = ?
-    `;
-    const [candidateRows] = await connection.query(candidateQuery, [email]);
-    
-    if (candidateRows.length === 0) {
-      return new Response(JSON.stringify({ error: 'Candidate not found' }), { status: 404 });
+    // Ensure email and jobId are provided
+    if (!email || !jobId) {
+      return NextResponse.json({ error: 'Email and Job ID are required.' }, { status: 400 });
     }
-    const candidateId = candidateRows[0].candidate_id;
 
-    // Retrieve the job title based on jobId
-    const jobTitleQuery = `
-      SELECT title FROM Jobs WHERE job_id = ?
-    `;
-    const [jobRows] = await connection.query(jobTitleQuery, [jobId]);
-    
-    if (jobRows.length === 0) {
-      return new Response(JSON.stringify({ error: 'Job not found' }), { status: 404 });
+    // Fetch candidate ID using the email
+    const [candidates] = await connection.execute("SELECT candidate_id FROM Candidates WHERE email = ?", [email]);
+    if (candidates.length === 0) {
+      return NextResponse.json({ error: 'Candidate not found.' }, { status: 404 });
     }
-    const jobTitle = jobRows[0].title;
 
-    // Insert entry in JobApplications table
-    const insertApplicationQuery = `
-      INSERT INTO JobApplications (job_id, candidate_id, applied_at)
-      VALUES (?, ?, CURRENT_TIMESTAMP)
-    `;
-    await connection.query(insertApplicationQuery, [jobId, candidateId]);
+    const candidateId = candidates[0].candidate_id;
 
-    // Send confirmation email to the candidate
-    await sendApplicationEmail(candidateName, email, jobTitle);
+    // Fetch job details
+    const [job] = await connection.execute("SELECT job_title FROM Jobs WHERE job_id = ?", [jobId]);
+    if (!job.length) {
+      return NextResponse.json({ error: 'Job not found.' }, { status: 404 });
+    }
 
-    return new Response(JSON.stringify({ message: 'Application submitted successfully' }), { status: 200 });
+    const jobTitle = job[0].job_title;
+
+    // Convert base64 strings to Buffers for resume and photo uploads
+    const resumeBuffer = resumeBase64 ? Buffer.from(resumeBase64, 'base64') : null;
+    const photoBuffer = photoBase64 ? Buffer.from(photoBase64, 'base64') : null;
+
+    // Upload resume and photo to S3
+    const resumeUrl = await uploadFileToS3(resumeBuffer, resumeName, 'resumes', resumeType);
+    const photoUrl = await uploadFileToS3(photoBuffer, photoName, 'photos', photoType);
+
+    // Update the candidate's resume and photo URLs in the Candidates table
+    await connection.execute(
+      `UPDATE Candidates SET resume_link = ?, photo_link = ? WHERE candidate_id = ?`,
+      [resumeUrl, photoUrl, candidateId]
+    );
+
+    // Insert the job application into the database
+    await connection.execute(
+      `INSERT INTO JobApplications (job_id, candidate_id, applied_at) VALUES (?, ?, CURRENT_TIMESTAMP)`,
+      [jobId, candidateId]
+    );
+
+    // Send application confirmation email
+    await sendApplicationEmail(email, jobTitle);
+
+    return NextResponse.json({ message: 'Application submitted successfully.' }, { status: 200 });
   } catch (error) {
-    console.error(error);
-    return new Response(JSON.stringify({ error: 'Failed to apply for job' }), { status: 500 });
+    console.error('Error processing application:', error);
+    return NextResponse.json({ error: 'Failed to submit application.' }, { status: 500 });
   }
 }
