@@ -99,7 +99,6 @@ export async function POST(req) {
       interestDomains: interestDomains || null,
     };
 
-    // Insert candidate information into MySQL database
     const [result] = await connection.execute(
       `INSERT INTO Candidates (name, email, password, company, resume_link, photo_link, highest_education, college_name, address, interest_domains)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -117,7 +116,6 @@ export async function POST(req) {
       ]
     );
 
-    // Send confirmation email
     await sendRegistrationEmail(email, candidateName, company, resumeUrl);
 
     return NextResponse.json({

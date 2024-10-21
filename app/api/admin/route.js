@@ -21,6 +21,9 @@ export async function POST(req) {
     return new Response(JSON.stringify({ message: 'Admin registered successfully' }), { status: 200 });
   } catch (error) {
     console.error(error);
+    if (error.errno==1062){
+      return new Response(JSON.stringify({ error: 'Email already registered' }), { status: 500 });
+    }
     return new Response(JSON.stringify({ error: 'Failed to register admin' }), { status: 500 });
   }
 }

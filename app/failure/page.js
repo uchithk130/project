@@ -1,8 +1,10 @@
 // app/failure/page.js
 "use client";
-
+import { useSearchParams } from 'next/navigation';
 
 export default function FailurePage() {
+  const searchParams = useSearchParams();
+  const errorMessage = searchParams.get('message');
 
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -22,6 +24,9 @@ export default function FailurePage() {
         <h2 className="mt-8 text-2xl font-semibold text-gray-700">
           Registration Failed!
         </h2>
+        <p className="mt-4 text-gray-600">
+          {errorMessage || "There was an issue registering your account."}
+        </p>
       </div>
     </div>
   );
