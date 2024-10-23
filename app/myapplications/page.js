@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import axios from 'axios';
-import { format } from 'date-fns'; // Make sure to import format for date formatting
+import { format } from 'date-fns';
 import JobDetails from '../components/jobdetails'; // Adjust the import path as necessary
 
 const MyApplications = () => {
@@ -12,18 +12,21 @@ const MyApplications = () => {
   const [selectedJob, setSelectedJob] = useState(null);
   const [showJobDetailsPopup, setShowJobDetailsPopup] = useState(false);
   const [error, setError] = useState(null);
-  const[Name,setName]=useState(null);
+  const [name, setName] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [showResume, setShowResume] = useState(false);
+  const [showPhoto, setShowPhoto] = useState(false);
 
   useEffect(() => {
     const fetchApplications = async () => {
       if (user) {
         try {
-          setLoading(true); // Set loading to true when fetching data
+          setLoading(true);
           // Fetch candidate ID based on user email
           const candidateResponse = await axios.get(`/api/candidates?email=${user.primaryEmailAddress.emailAddress}`);
           const candidateId = candidateResponse.data.candidate_id;
-          setName(candidateResponse.data.name)
+          setName(candidateResponse.data.name);
 
           // Fetch job applications for that candidate ID
           const applicationsResponse = await axios.get(`/api/jobapplications?candidate_id=${candidateId}`);
@@ -37,7 +40,9 @@ const MyApplications = () => {
           // Combine applications with job details
           const applicationsWithDetails = applicationsResponse.data.map((app, index) => ({
             ...jobsResponse.data[index],
-            applied_on: app.applied_at
+            applied_on: app.applied_at,
+            resume: app.resume,          
+            photo: app.photo 
           }));
 
           setApplications(applicationsWithDetails);
@@ -45,7 +50,7 @@ const MyApplications = () => {
           setError('Failed to fetch applications.');
           console.error(err);
         } finally {
-          setLoading(false); // Set loading to false after fetching
+          setLoading(false);
         }
       }
     };
@@ -53,28 +58,33 @@ const MyApplications = () => {
     fetchApplications();
   }, [user]);
 
+  const handleClose = () => {
+    setShowResume(false);
+    setShowPhoto(false);
+    setSelectedJob(null); // Reset selected job on close
+  };
+
   if (loading) {
     return (
-
-        <div className="container mx-auto min-h-screen p-10 bg-gradient-to-br from-green-50 to-gray-200">
-          <h1 className="text-5xl font-bold text-center mb-12 text-green-800">My Applications</h1>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="bg-white shadow-md rounded-lg p-6 animate-pulse">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
-                  <div className="h-6 bg-gray-300 rounded w-1/4 mb-2"></div>
-                </div>
-                <p className="h-4 bg-gray-300 rounded mb-2"></p>
-                <p className="h-4 bg-gray-300 rounded mb-2 w-1/2"></p>
-                <div className="flex justify-between">
-                  <div className="h-4 bg-gray-300 rounded w-1/3"></div>
-                </div>
+      <div className="container mx-auto min-h-screen p-10 bg-gradient-to-br from-green-50 to-gray-200">
+        <h1 className="text-5xl font-bold text-center mb-12 text-green-800">My Applications</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="bg-white shadow-md rounded-lg p-6 animate-pulse">
+              <div className="flex justify-between items-center mb-4">
+                <div className="h-6 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div className="h-6 bg-gray-300 rounded w-1/4 mb-2"></div>
               </div>
-            ))}
-          </div>
+              <p className="h-4 bg-gray-300 rounded mb-2"></p>
+              <p className="h-4 bg-gray-300 rounded mb-2 w-1/2"></p>
+              <div className="flex justify-between">
+                <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+              </div>
+            </div>
+          ))}
         </div>
-      );
+      </div>
+    );
   }
 
   if (error) return <div className="text-red-500 text-center">{error}</div>;
@@ -83,7 +93,7 @@ const MyApplications = () => {
   return (
     <div className="container mx-auto min-h-screen p-10 bg-gradient-to-br from-green-50 to-gray-200">
       <h1 className="text-5xl font-bold text-center mb-12 text-green-800">My Applications</h1>
-      <h2 className="text-2xl font-semibold text-center mb-6">Hi, {Name}!</h2> {/* Welcome message */}
+      <h2 className="text-2xl font-semibold text-center mb-6">Hi, {name}!</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {applications.map((job) => (
           <div
@@ -94,13 +104,13 @@ const MyApplications = () => {
               <h2 className="text-2xl font-semibold text-gray-800">{job.job_title}</h2>
               <span
                 className={`text-sm font-semibold px-2 py-1 rounded-full ${
-                    new Date(job.last_date_to_apply) > new Date()
+                  new Date(job.last_date_to_apply) > new Date()
                     ? "bg-green-100 text-green-600"
                     : "bg-red-100 text-red-600"
                 }`}
-                >
+              >
                 {new Date(job.last_date_to_apply) > new Date() ? "Active" : "Closed"}
-                </span>
+              </span>
             </div>
             <p className="text-gray-600 mb-2">
               Company: <span className="font-semibold">{job.company}</span>
@@ -118,12 +128,68 @@ const MyApplications = () => {
               >
                 Get Details
               </button>
+              {/* Resume View Button */}
+              <button
+                onClick={() => {
+                  setSelectedJob(job); // Set selected job for resume
+                  setShowResume(true);
+                }}
+                className="text-green-600 hover:underline transition duration-200"
+              >
+                Resume View
+              </button>
+              {/* Photo View Button */}
+              <button
+                onClick={() => {
+                  setSelectedJob(job); // Set selected job for photo
+                  setShowPhoto(true);
+                }}
+                className="text-blue-600 hover:underline transition duration-200"
+              >
+                Photo View
+              </button>
             </div>
-          </div>
+          </div> 
         ))}
       </div>
 
-      {showJobDetailsPopup && (
+      {/* Resume View Popup */}
+      {showResume && selectedJob && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
+         <div className="bg-white w-1/2 h-full p-6 relative overflow-auto transition-transform transform slide-in-from-right">
+           <button
+             className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+             onClick={() => setShowResume(false)}
+           >
+             &#10005;
+           </button>
+           <h3 className="text-xl font-semibold mb-4">Resume Preview</h3>
+           <iframe
+              src={`${selectedJob.resume}#toolbar=0`}             
+              className="w-full h-full"
+              title="Resume Preview"
+            />
+
+         </div>
+       </div>
+      )}
+
+      {/* Photo View Popup */}
+      {showPhoto && selectedJob && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
+        <div className="bg-white h-full w-2/3 p-6 relative">
+          <button
+            className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+            onClick={() => setShowPhoto(false)}
+          >
+            &#10005;
+          </button>
+          <img src={selectedJob.photo} alt="Uploaded" className="max-w-60 h-60" />
+        </div>
+      </div>
+      )}
+
+      {showJobDetailsPopup && selectedJob && (
         <JobDetails
           job={selectedJob}
           onClose={() => setShowJobDetailsPopup(false)}
@@ -134,3 +200,4 @@ const MyApplications = () => {
 };
 
 export default MyApplications;
+

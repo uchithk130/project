@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import AnimationPopup from "../components/AnimationPopup";
@@ -14,9 +14,9 @@ export default function Jobs() {
   const [selectedJob, setSelectedJob] = useState(null);
   const [animationVisible, setAnimationVisible] = useState(false);
   const [animationMessage, setAnimationMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(true);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const[Load,setLoad]=useState(false);
+  const [Load, setLoad] = useState(false);
   const [resume, setResume] = useState(null);
   const [resumeName, setResumeName] = useState("");
   const [photo, setPhoto] = useState(null);
@@ -24,6 +24,8 @@ export default function Jobs() {
   const [showPopup, setShowPopup] = useState(false);
   const [showJobDetailsPopup, setShowJobDetailsPopup] = useState(false);
   const [photoPreview, setPhotoPreview] = useState("");
+  const [resumePreviewVisible, setResumePreviewVisible] = useState(false); // For resume preview visibility
+  const [photoPreviewVisible, setPhotoPreviewVisible] = useState(false); // For photo preview visibility
 
   useEffect(() => {
     async function fetchJobs() {
@@ -33,11 +35,9 @@ export default function Jobs() {
         const data = await response.json();
         setJobs(data);
         setFilteredJobs(data);
-        
       } catch (error) {
         console.error("Error fetching jobs:", error);
-      }
-      finally{
+      } finally {
         setLoad(false);
       }
     }
@@ -125,7 +125,8 @@ export default function Jobs() {
     }
   };
 
-  if (Load) {
+
+    if (Load) {
     return (
 
         <div className="container mx-auto min-h-screen p-10 bg-gradient-to-br from-indigo-50 to-gray-200">
@@ -148,7 +149,6 @@ export default function Jobs() {
         </div>
       );
   }
-
   return (
     <div className="container mx-auto min-h-screen p-10 bg-gradient-to-br from-indigo-50 to-gray-200">
       <h1 className="text-5xl font-bold text-center mb-12 text-indigo-700">Job Listings</h1>
@@ -235,76 +235,109 @@ export default function Jobs() {
       )}
 
       {/* Apply Popup */}
-     {/* Apply Popup */}
-{showPopup && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded-lg relative">
-      <button
-        className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
-        onClick={() => setShowPopup(false)}
-      >
-        &#10005;
-      </button>
-      <h3 className="text-xl font-semibold mb-4">Take Photo & Upload Resume</h3>
+      {showPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+              onClick={() => setShowPopup(false)}
+            >
+              &#10005;
+            </button>
+            <h3 className="text-xl font-semibold mb-4">Take Photo & Upload Resume</h3>
 
-      <label className="block text-gray-700 font-semibold mb-1">Upload Resume:</label>
-      <input
-        type="file"
-        accept=".pdf,.doc,.docx"
-        onChange={(e) => {
-          const file = e.target.files[0];
-          setResume(file);
-          setResumeName(file.name);
-        }}
-        className="mb-2 border rounded-md p-2"
-      />
+            <label className="block text-gray-700 font-semibold mb-1">Upload Resume:</label>
+            <div className="flex items-center">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  setResume(file);
+                  setResumeName(file.name);
+                }}
+                className="mb-2 border rounded-md p-2"
+              />
+              <button
+                onClick={() => setResumePreviewVisible(true)}
+                className="ml-4 text-blue-600 hover:underline"
+              >
+                View
+              </button>
+            </div>
 
-      <label className="block text-gray-700 font-semibold mb-1">Capture Live Photo:</label>
-      <input
-        type="file"
-        accept="image/*"
-        capture="user" // Use 'user' to capture from the front camera; 'environment' for rear camera
-        onChange={(e) => {
-          const file = e.target.files[0];
-          setPhoto(file);
-          setPhotoName(file.name);
+            <label className="block text-gray-700 font-semibold mb-1">Upload Photo:</label>
+            <div className="flex items-center">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  setPhoto(file);
+                  setPhotoPreview(URL.createObjectURL(file));
+                  setPhotoName(file.name);
+                }}
+                className="mb-2 border rounded-md p-2"
+              />
+              <button
+                onClick={() => setPhotoPreviewVisible(true)}
+                className="ml-4 text-blue-600 hover:underline"
+              >
+                View
+              </button>
+            </div>
 
-          // Create a preview for the photo
-          const reader = new FileReader();
-          reader.onload = () => {
-            setPhotoPreview(reader.result);
-          };
-          reader.readAsDataURL(file);
-        }}
-        className="mb-2 border rounded-md p-2"
-      />
-      {photoPreview && (
-        <div className="mt-2">
-          <img
-            src={photoPreview}
-            alt="Preview"
-            className="w-32 h-32 object-cover rounded-md"
-          />
+            <button
+              onClick={handleApply}
+              className="bg-blue-600 text-white rounded-md px-4 py-2 mt-4"
+            >
+              {loading ? "Applying..." : "Submit Application"}
+            </button>
+          </div>
         </div>
       )}
 
-      <button
-        onClick={handleApply}
-        className={`mt-4 w-full bg-blue-500 text-white py-2 rounded-md ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-        disabled={loading}
-      >
-        {loading ? "Applying..." : "Submit Application"}
-      </button>
-    </div>
-  </div>
-)}
+      {/* Resume Preview */}
+           {/* Resume Preview Popup */}
+        {resumePreviewVisible && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
+              <div className="bg-white w-1/2 h-full p-6 relative overflow-auto transition-transform transform slide-in-from-right">
+                <button
+                  className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+                  onClick={() => setResumePreviewVisible(false)}
+                >
+                  &#10005;
+                </button>
+                <h3 className="text-xl font-semibold mb-4">Resume Preview</h3>
+                <iframe
+                  src={resume ? URL.createObjectURL(resume) : ""}
+                  className="w-full h-full"
+                  title="Resume Preview"
+                ></iframe>
+              </div>
+            </div>
+          )}
+
+      {/* Photo Preview */}
+      {photoPreviewVisible && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
+          <div className="bg-white h-full w-2/3 p-6 relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+              onClick={() => setPhotoPreviewVisible(false)}
+            >
+              &#10005;
+            </button>
+            <img src={photoPreview} alt="Uploaded" className="max-w-full h-auto" />
+          </div>
+        </div>
+      )}
 
       {/* Animation Popup */}
       {animationVisible && (
         <AnimationPopup
           message={animationMessage}
           isSuccess={isSuccess}
-          onClose={() => setAnimationVisible(false)}
         />
       )}
     </div>
