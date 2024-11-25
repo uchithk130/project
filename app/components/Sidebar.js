@@ -91,12 +91,12 @@ function Sidebar() {
                 </Link>
               </li>
               <li>
-                <Link href="/scheduling" legacyBehavior>
+                <Link href="/Schedule" legacyBehavior>
                   <a
-                    onClick={() => handleLinkClick('/scheduling')}
-                    className={`block py-2 px-3 border-l-4 ${activePath === '/scheduling' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
+                    onClick={() => handleLinkClick('/Schedule')}
+                    className={`block py-2 px-3 border-l-4 ${activePath === '/Schedule' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
                   >
-                    Scheduling
+                    Schedule
                   </a>
                 </Link>
               </li>

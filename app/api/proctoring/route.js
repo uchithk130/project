@@ -2,7 +2,7 @@
 import { RekognitionClient, CompareFacesCommand } from "@aws-sdk/client-rekognition";
 
 const rekognitionClient = new RekognitionClient({
-  region: "us-east-1", // Use the correct AWS region
+  region: "us-east-1", 
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -18,8 +18,8 @@ export async function POST(req) {
     const params = {
       SourceImage: {
         S3Object: {
-          Bucket: "uchith", // Replace with your S3 bucket name
-          Name: "Uchith.jpg", // Replace with the name of the reference image
+          Bucket: "uchith", 
+          Name: "Uchith.jpg", 
         },
       },
       TargetImage: {

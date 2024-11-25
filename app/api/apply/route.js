@@ -49,7 +49,6 @@ const uploadFileToS3 = async (fileBuffer, fileName, folder, contentType) => {
     Key: `${folder}/${fileName}`,
     Body: fileBuffer,
     ContentType: contentType,
-    ContentDisposition: 'inline',
     ACL: 'public-read',
   };
 

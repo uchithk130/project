@@ -1,21 +1,21 @@
-// components/JobDetails.js
 "use client";
 
 import React from 'react';
 import { format } from 'date-fns';
-
+import ReactMarkdown from 'react-markdown'; 
+import remarkGfm from 'remark-gfm'; 
 const JobDetails = ({ job, onClose }) => {
   if (!job) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 shadow-lg max-w-lg w-full">
+      <div className="bg-white rounded-lg p-6 shadow-lg max-w-lg w-full h-4/5 overflow-y-auto">
         <h2 className="text-3xl font-semibold text-gray-800 mb-4">{job.job_title}</h2>
 
         <p className="text-gray-600 mb-2">
           Company: <span className="font-semibold">{job.company}</span>
         </p>
-        
+
         {job.domain && (
           <p className="text-gray-600 mb-2">
             Domain: <span className="font-semibold">{job.domain}</span>
@@ -32,12 +32,16 @@ const JobDetails = ({ job, onClose }) => {
 
         <p className="text-gray-700 mb-4">
           <strong>Job Description:</strong> <br />
-          {job.description || "No description available"}
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {job.description || "No description available"}
+          </ReactMarkdown>
         </p>
 
         <p className="text-gray-700 mb-4">
           <strong>Eligibility Criteria:</strong> <br />
-          {job.eligibility || "No criteria specified"}
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {job.eligibility || "No criteria specified"}
+          </ReactMarkdown>
         </p>
 
         <div className="flex justify-end">

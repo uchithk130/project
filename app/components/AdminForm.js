@@ -1,195 +1,119 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
-import { BriefcaseIcon, ClipboardIcon, CalendarIcon, CheckCircleIcon, GlobeAltIcon } from '@heroicons/react/outline';
-import { useUser } from '@clerk/nextjs'; // Import useUser from Clerk
+import { BriefcaseIcon, UserIcon, CheckCircleIcon } from '@heroicons/react/outline';
+import { ClipLoader } from "react-spinners"; 
 
 export default function AdminForm() {
-  const { user } = useUser(); // Use Clerk's useUser to get the user
-  const [jobTitle, setJobTitle] = useState('');
-  const [company, setCompany] = useState('');
-  const [domain, setDomain] = useState('');
-  const [description, setDescription] = useState('');
-  const [eligibilityCriteria, setEligibilityCriteria] = useState('');
-  const [lastDateToApply, setLastDateToApply] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Loading state
+    const router = useRouter();
+    const [adminName, setAdminName] = useState('');
+    const [email, setEmail] = useState('');
+    const [companyName, setCompanyName] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true); 
+        const loadingToast = toast.loading("Registering admin...");
 
-    // Show loading spinner
-    setIsLoading(true);
-    const loadingToast = toast.loading("Adding job...");
+        try {
+            const response = await fetch("/api/admin/", {
+                method: "POST",
+                body: JSON.stringify({ adminName, email, companyName, password }),
+                headers: { "Content-Type": "application/json" },
+            });
 
-    try {
-      // Send job details and email to the backend
-      const response = await fetch("/api/jobentry", {
-        method: "POST",
-        body: JSON.stringify({ 
-          jobTitle, 
-          company, 
-          domain, 
-          description, 
-          eligibilityCriteria, 
-          lastDateToApply,
-          email: user.primaryEmailAddress.emailAddress // Pass email to backend
-        }),
-        headers: { "Content-Type": "application/json" },
-      });
+            const result = await response.json();
 
-      const result = await response.json();
+            if (response.ok) {
+                toast.success("Admin registered successfully!", { id: loadingToast });
+                setAdminName('');
+                setEmail('');
+                setCompanyName('');
+                setPassword('');
+                router.push("/success");
+            } else {
+                // Pass the error message to the failure page
+                toast.error(`Failed to register admin: ${result.error}`, { id: loadingToast });
+                router.push(`/failure?message=${encodeURIComponent(result.error)}`);
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred!", { id: loadingToast });
+            router.push("/failure?message=An unexpected error occurred");
+        } finally {
+            setLoading(false); 
+          }
+    };
 
-      if (response.ok) {
-        toast.success("Job added successfully!", { id: loadingToast });
-        // Clear form fields
-        setJobTitle('');
-        setCompany('');
-        setDomain('');
-        setDescription('');
-        setEligibilityCriteria('');
-        setLastDateToApply('');
-      } else {
-        toast.error(`Failed to add job: ${result.error}`, { id: loadingToast });
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred!", { id: loadingToast });
-    } finally {
-      // Stop the loading spinner
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-4xl flex flex-col items-center justify-center bg-white rounded-xl shadow-lg backdrop-blur-md p-10">
-        <h2 className="text-4xl font-bold text-gray-700 mb-6 text-center">
-          <BriefcaseIcon className="h-8 w-8 inline-block text-blue-500 mr-2" />
-          Add New Job
-        </h2>
-        <form onSubmit={handleSubmit} className="w-full max-w-4xl space-y-6">
-          <div className="flex flex-wrap -mx-4">
-            <div className="flex-1 px-4">
-              <label className="block text-lg font-medium text-gray-600 mb-1">Job Title</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  required
-                  placeholder="Enter job title"
-                  className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                />
-                <BriefcaseIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </div>
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            <div className="w-1000 h-full flex flex-col items-center justify-center bg-white rounded-xl shadow-lg backdrop-blur-md p-10">
+                <h2 className="text-4xl font-bold text-gray-700 mb-6 text-center">
+                    <UserIcon className="h-8 w-8 inline-block text-blue-500 mr-2" />
+                    Admin Registration
+                </h2>
+                <form onSubmit={handleSubmit} className="w-full max-w-4xl space-y-6">
+                    <div className="flex flex-wrap -mx-4">
+                        <div className="flex-1 px-4">
+                            <label className="block text-lg font-medium text-gray-600 mb-1">Admin Name</label>
+                            <input
+                                type="text"
+                                value={adminName}
+                                onChange={(e) => setAdminName(e.target.value)}
+                                required
+                                placeholder="Enter your name"
+                                className="w-full py-3 pl-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                            />
+                        </div>
+                        <div className="flex-1 px-4">
+                            <label className="block text-lg font-medium text-gray-600 mb-1">Email</label>
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                                placeholder="Enter your email"
+                                className="w-full py-3 pl-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap -mx-4">
+                        <div className="flex-1 px-4">
+                            <label className="block text-lg font-medium text-gray-600 mb-1">Company Name</label>
+                            <input
+                                type="text"
+                                value={companyName}
+                                onChange={(e) => setCompanyName(e.target.value)}
+                                required
+                                placeholder="Enter company name"
+                                className="w-full py-3 pl-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                            />
+                        </div>
+                        <div className="flex-1 px-4">
+                            <label className="block text-lg font-medium text-gray-600 mb-1">Password</label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                                placeholder="Enter your password"
+                                className="w-full py-3 pl-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-center">
+                    <button
+                        type="submit"
+                        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300"
+                        disabled={loading} 
+                         >
+                        {loading ? <ClipLoader color="#fff" size={25} /> : "Register"}
+                    </button>
+                    </div>
+                </form>
             </div>
-            <div className="flex-1 px-4">
-              <label className="block text-lg font-medium text-gray-600 mb-1">Company Name</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  required
-                  placeholder="Enter company name"
-                  className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                />
-                <BriefcaseIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap -mx-4">
-            <div className="flex-1 px-4">
-              <label className="block text-lg font-medium text-gray-600 mb-1">Domain</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={domain}
-                  onChange={(e) => setDomain(e.target.value)}
-                  placeholder="Enter domain"
-                  className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                />
-                <GlobeAltIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </div>
-            </div>
-            <div className="flex-1 px-4">
-              <label className="block text-lg font-medium text-gray-600 mb-1">Last Date to Apply</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={lastDateToApply}
-                  onChange={(e) => setLastDateToApply(e.target.value)}
-                  required
-                  className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                />
-                <CalendarIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 px-4">
-            <label className="block text-lg font-medium text-gray-600 mb-1">Job Description</label>
-            <div className="relative">
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-                placeholder="Enter job description"
-                className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-              />
-              <ClipboardIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            </div>
-          </div>
-
-          <div className="flex-1 px-4">
-            <label className="block text-lg font-medium text-gray-600 mb-1">Eligibility Criteria</label>
-            <div className="relative">
-              <textarea
-                value={eligibilityCriteria}
-                onChange={(e) => setEligibilityCriteria(e.target.value)}
-                required
-                placeholder="Enter eligibility criteria"
-                className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-              />
-              <CheckCircleIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            </div>
-          </div>
-
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              className={`bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <svg
-                  className="animate-spin h-5 w-5 text-white inline-block mr-2"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-              ) : (
-                "Add Job"
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
+        </div>
+    );
 }

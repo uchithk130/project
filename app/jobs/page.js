@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import AnimationPopup from "../components/AnimationPopup";
-import JobDetails from "../components/jobdetails";
+import JobDetails from "../components/JobDetails";
+import ResumePreview from "../components/ResumePreview";
+import PhotoPreview from "../components/PhotoPreview";
+
 import { useUser } from "@clerk/nextjs";
 
 export default function Jobs() {
@@ -24,8 +27,8 @@ export default function Jobs() {
   const [showPopup, setShowPopup] = useState(false);
   const [showJobDetailsPopup, setShowJobDetailsPopup] = useState(false);
   const [photoPreview, setPhotoPreview] = useState("");
-  const [resumePreviewVisible, setResumePreviewVisible] = useState(false); // For resume preview visibility
-  const [photoPreviewVisible, setPhotoPreviewVisible] = useState(false); // For photo preview visibility
+  const [resumePreviewVisible, setResumePreviewVisible] = useState(false); 
+  const [photoPreviewVisible, setPhotoPreviewVisible] = useState(false); 
 
   useEffect(() => {
     async function fetchJobs() {
@@ -297,40 +300,19 @@ export default function Jobs() {
         </div>
       )}
 
-      {/* Resume Preview */}
-           {/* Resume Preview Popup */}
-        {resumePreviewVisible && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
-              <div className="bg-white w-1/2 h-full p-6 relative overflow-auto transition-transform transform slide-in-from-right">
-                <button
-                  className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
-                  onClick={() => setResumePreviewVisible(false)}
-                >
-                  &#10005;
-                </button>
-                <h3 className="text-xl font-semibold mb-4">Resume Preview</h3>
-                <iframe
-                  src={resume ? URL.createObjectURL(resume) : ""}
-                  className="w-full h-full"
-                  title="Resume Preview"
-                ></iframe>
-              </div>
-            </div>
+          {resumePreviewVisible && (
+            <ResumePreview
+              resume={resume}
+              onClose={() => setResumePreviewVisible(false)}
+            />
           )}
 
       {/* Photo Preview */}
       {photoPreviewVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-end z-50">
-          <div className="bg-white h-full w-2/3 p-6 relative">
-            <button
-              className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
-              onClick={() => setPhotoPreviewVisible(false)}
-            >
-              &#10005;
-            </button>
-            <img src={photoPreview} alt="Uploaded" className="max-w-full h-auto" />
-          </div>
-        </div>
+        <PhotoPreview
+          photoPreview={photoPreview}
+          onClose={() => setPhotoPreviewVisible(false)}
+        />
       )}
 
       {/* Animation Popup */}

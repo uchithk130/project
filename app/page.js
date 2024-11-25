@@ -11,7 +11,7 @@ export default function Home() {
   const startInterview = () => {
     router.push("/upload");
   };
-
+ 
   return (
     <div>
             <ProctoringWidget setMatchStatus={setMatchStatus} />
