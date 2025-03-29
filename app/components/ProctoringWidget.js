@@ -15,7 +15,7 @@ const ProctoringWidget = ({ setMatchStatus }) => {
     // Automatic frame capture every minute
     const interval = setInterval(() => {
       captureFrame();
-    }, 60000); // 60 seconds 
+    }, 3000); // 60 seconds 
 
     // Cleanup interval on component unmount
     return () => clearInterval(interval);

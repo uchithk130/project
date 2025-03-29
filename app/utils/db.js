@@ -6,7 +6,7 @@ const connection = mysql.createPool({
     password: 'root',
     database: 'interview_automation',
     port: 3306,
-    connectTimeout: 30000, // Increase timeout to 30 seconds
+    connectTimeout: 30000, // Increase timeout to 30 seconds 
   });
   
 

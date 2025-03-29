@@ -26,9 +26,11 @@ export async function GET(req) {
 
     // Step 2: Get the job_ids posted by the admin
     const [jobResults] = await connection.execute(
-      'SELECT job_id FROM Jobs WHERE admin_id = ?',
+      'SELECT job_id,job_title,company FROM Jobs WHERE admin_id = ?',
       [adminId]
     );
+
+ 
 
     if (jobResults.length === 0) {
       return NextResponse.json({ message: 'No jobs posted by this admin' }, { status: 404 });
@@ -38,7 +40,7 @@ export async function GET(req) {
     let candidateData = [];
     for (let job of jobResults) {
       const [applicationResults] = await connection.execute(
-        'SELECT candidate_id, resume, photo FROM JobApplications WHERE job_id = ?',
+        'SELECT application_id,candidate_id, resume, photo, extracted_data FROM JobApplications WHERE job_id = ?',
         [job.job_id]
       );
 
@@ -48,20 +50,24 @@ export async function GET(req) {
           'SELECT candidate_id, name, email, company, highest_education, college_name, address, interest_domains, created_at FROM Candidates WHERE candidate_id = ?',
           [application.candidate_id]
         );
-
+       
         if (candidateResults.length > 0) { 
           candidateData.push({
             ...candidateResults[0],
             job_id:job.job_id,
+            job_title:job.job_title,
+            Jobcompany:job.company,
+            application_id:application.application_id,
             resume: application.resume,  
             photo: application.photo,
+            extracted_data:application.extracted_data
+            
           });
         }
       }
     }
 
     // Step 5: Return the candidate data
-    console.log(candidateData);
     return NextResponse.json(candidateData, { status: 200 });
 
   } catch (error) {

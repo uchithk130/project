@@ -81,12 +81,12 @@ function Sidebar() {
                 </Link>
               </li>
               <li>
-                <Link href="/resume" legacyBehavior>
+                <Link href="/reports" legacyBehavior>
                   <a
-                    onClick={() => handleLinkClick('/resume')}
-                    className={`block py-2 px-3 border-l-4 ${activePath === '/resume' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
+                    onClick={() => handleLinkClick('/reports')}
+                    className={`block py-2 px-3 border-l-4 ${activePath === '/reports' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
                   >
-                    Resume
+                    Reports
                   </a>
                 </Link>
               </li>
@@ -101,10 +101,10 @@ function Sidebar() {
                 </Link>
               </li>
               <li>
-                <Link href="/interview" legacyBehavior>
+                <Link href="/candidateInterviews" legacyBehavior>
                   <a
-                    onClick={() => handleLinkClick('/interview')}
-                    className={`block py-2 px-3 border-l-4 ${activePath === '/interview' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
+                    onClick={() => handleLinkClick('/candidateInterviews')}
+                    className={`block py-2 px-3 border-l-4 ${activePath === '/candidateInterviews' ? 'bg-gray-300 border-gray-600' : 'hover:bg-gray-300 hover:border-gray-600'}`}
                   >
                     Interview
                   </a>

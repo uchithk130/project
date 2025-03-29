@@ -5,6 +5,8 @@ import { toast } from "react-hot-toast";
 import { BriefcaseIcon, ClipboardIcon, CalendarIcon, CheckCircleIcon, GlobeAltIcon } from '@heroicons/react/outline';
 import { useUser } from '@clerk/nextjs'; // Import useUser from Clerk
 import ReactMarkdown from "react-markdown"; // Import ReactMarkdown
+import "react-quill/dist/quill.snow.css"; // Import Quill's styles
+import ReactQuill from "react-quill";
  
 export default function JobAddForm() {
   const { user } = useUser();
@@ -129,34 +131,47 @@ export default function JobAddForm() {
 
           <div className="flex-1 px-4">
             <label className="block text-lg font-medium text-gray-600 mb-1">Job Description</label>
-            <div className="relative">
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-                placeholder="Enter job description with markdown (e.g., **bold**, *italic*, bullet points)"
-                className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-              />
-              <ClipboardIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            </div>
-            {/* Render markdown */}
-            <ReactMarkdown>{description}</ReactMarkdown>
+            <ReactQuill
+              value={description}
+              onChange={setDescription} 
+              placeholder="Enter job description..."
+              className="bg-gray-50"
+              theme="snow" 
+              modules={{
+                toolbar: [
+                  [{ header: [1, 2, 3, false] }], 
+                  [{ size: ["small", false, "large", "huge"] }], 
+                  ["bold", "italic", "underline", "strike"], 
+                  [{ list: "ordered" }, { list: "bullet" }], 
+                  ["link", "image"], 
+                  [{ align: [] }], 
+                  ["clean"], 
+                ],
+              }}
+            />
           </div>
 
-          <div className="flex-1 px-4">
-            <label className="block text-lg font-medium text-gray-600 mb-1">Eligibility Criteria</label>
-            <div className="relative">
-              <textarea
-                value={eligibilityCriteria}
-                onChange={(e) => setEligibilityCriteria(e.target.value)}
-                required
-                placeholder="Enter eligibility criteria with markdown"
-                className="w-full py-3 pl-10 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-              />
-              <CheckCircleIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            </div>
-            {/* Render markdown */}
-            <ReactMarkdown>{eligibilityCriteria}</ReactMarkdown>
+
+        <div className="flex-1 px-4">
+          <label className="block text-lg font-medium text-gray-600 mb-1">Eligibility Criteria</label>
+          <ReactQuill
+              value={eligibilityCriteria}
+              onChange={setEligibilityCriteria} 
+              placeholder="Enter eligibility criteria..."
+              className="bg-gray-50"
+              theme="snow"
+              modules={{
+                toolbar: [
+                  [{ header: [1, 2, 3, false] }], 
+                  [{ size: ["small", false, "large", "huge"] }], 
+                  ["bold", "italic", "underline", "strike"], 
+                  [{ list: "ordered" }, { list: "bullet" }], 
+                  ["link", "image"], 
+                  [{ align: [] }], 
+                  ["clean"], 
+                ],
+              }}
+            />
           </div>
 
           <div className="flex justify-center">

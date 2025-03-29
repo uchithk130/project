@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect,useRef } from "react";
 import { format } from "date-fns";
 import AnimationPopup from "../components/AnimationPopup";
 import JobDetails from "../components/JobDetails";
 import ResumePreview from "../components/ResumePreview";
 import PhotoPreview from "../components/PhotoPreview";
+import EditExtractedData from "../components/EditExtractedData";
 
 import { useUser } from "@clerk/nextjs";
 
@@ -15,6 +16,7 @@ export default function Jobs() {
   const [selectedCompany, setSelectedCompany] = useState("");
   const [showActive, setShowActive] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [candidateEmail,setCandidateEmail]=useState("");
   const [animationVisible, setAnimationVisible] = useState(false);
   const [animationMessage, setAnimationMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
@@ -22,13 +24,21 @@ export default function Jobs() {
   const [Load, setLoad] = useState(false);
   const [resume, setResume] = useState(null);
   const [resumeName, setResumeName] = useState("");
-  const [photo, setPhoto] = useState(null);
+  const [resumeUrl,setResumeUrl] = useState("");
   const [photoName, setPhotoName] = useState("");
+  const [photoUrl,setPhotoUrl] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [showJobDetailsPopup, setShowJobDetailsPopup] = useState(false);
   const [photoPreview, setPhotoPreview] = useState("");
   const [resumePreviewVisible, setResumePreviewVisible] = useState(false); 
   const [photoPreviewVisible, setPhotoPreviewVisible] = useState(false); 
+  const [editPreviewVisible, setEditPreviewVisible] = useState(false); 
+  const [cameraEnabled, setCameraEnabled] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState("");
+  const [extractedData, setExtractedData] = useState("");
+  const [showEditPopup, setShowEditPopup] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   useEffect(() => {
     async function fetchJobs() {
@@ -47,6 +57,60 @@ export default function Jobs() {
     fetchJobs();
   }, []);
 
+  const startCamera = () => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+         
+            videoRef.current.srcObject = stream;
+            setCameraEnabled(true);
+          
+        })
+        .catch((error) => {
+          alert("Error accessing the camera.",error);
+          console.error("Error accessing the camera:", error);
+          setCameraEnabled(false);
+        });
+    } else {
+      alert("Your browser doesn't support camera access.");
+      setCameraEnabled(false);
+    }
+  };
+
+  const capturePhoto = () => {
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const context = canvas?.getContext("2d");
+  
+    if (video && canvas && context) {
+      // Capture the current frame from the video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Capture the photo as a data URL
+      const dataUrl = canvas.toDataURL("image/jpeg");
+  
+      const uniquePhotoName = `photo_${Date.now()}`;
+      setPhotoName(uniquePhotoName);
+      setCapturedPhoto(dataUrl);  // Store the captured photo
+      setPhotoPreview(dataUrl);  // Show the photo preview
+      // Handle the captured image data as needed
+  
+      // Pause the video stream
+      video.pause();  // Pause video playback
+  
+      // Optionally stop the video stream to release the camera
+      const stream = video.srcObject;
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());  // Stop each track of the stream
+      }
+    }
+  };
+  
+  
+  
   const companyNames = Array.from(new Set(jobs.map((job) => job.company)));
 
   const handleFilter = () => {
@@ -76,58 +140,79 @@ export default function Jobs() {
     });
   };
 
-  const handleApply = async () => {
+
+ 
+
+
+  const handleUpload = async () => {
+    setCameraEnabled(false);
     if (!user?.primaryEmailAddress?.emailAddress) {
       alert("User not authenticated");
       return;
     }
-
-    if (!resume || !photo) {
+  
+    if (!resume || !capturedPhoto) {
       alert("Please upload both resume and photo.");
-      return;
+      return; 
     }
-
+  
     const resumeBase64 = resume ? await fileToBase64(resume) : null;
-    const photoBase64 = photo ? await fileToBase64(photo) : null;
-
+    const photoBase64 = capturedPhoto.split(",")[1]; 
     const candidateEmail = user.primaryEmailAddress.emailAddress;
+    const jobId = selectedJob?.job_id;
     setLoading(true);
-
+    console.log(jobId)
+  
     try {
-      const response = await fetch("/api/apply", {
+      const response = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: candidateEmail,
-          jobId: selectedJob?.job_id,
+          jobId : jobId,
           resumeBase64: resumeBase64,
           resumeName: resumeName,
           photoBase64: photoBase64,
           photoName: photoName,
         }),
       });
-
+  
       if (!response.ok) throw new Error("Failed to apply for job.");
-      setPhotoPreview("");
+      const data = await response.json();
+      const extractData = data.extractedData;
+      const resumeUrl = data.resumeUrl;
+      const photoUrl = data.photoUrl;
+      setCandidateEmail(candidateEmail);
+      setExtractedData(extractData)
+      setResumeUrl(resumeUrl);
+      setPhotoUrl(photoUrl);
+      setEditPreviewVisible(true);
       setShowPopup(false);
-      setAnimationMessage("Your application was sent successfully!");
-      setIsSuccess(true);
-      setAnimationVisible(true);
-      setTimeout(() => setAnimationVisible(false), 3000);
-
     } catch (error) {
       console.error("Error applying for job:", error);
       setAnimationMessage("Application failed. Please try again.");
-      setShowPopup(false);
-      setPhotoPreview("");
-      setIsSuccess(false);
-      setAnimationVisible(true);
-      setTimeout(() => setAnimationVisible(false), 3000);
     } finally {
       setLoading(false);
     }
   };
+  
 
+  const handleApplicationSuccess = (message) => {
+    setEditPreviewVisible(false);
+    setAnimationMessage(message);
+    setIsSuccess(true);
+    setAnimationVisible(true);
+    setTimeout(() => setAnimationVisible(false), 3000);
+  };
+  
+  const handleApplicationFailure = (message) => {
+    setEditPreviewVisible(false);
+    setAnimationMessage(message);
+    setIsSuccess(false);
+    setAnimationVisible(true);
+    setTimeout(() => setAnimationVisible(false), 3000);
+  };
+  
+ 
 
     if (Load) {
     return (
@@ -236,6 +321,13 @@ export default function Jobs() {
           onClose={() => setShowJobDetailsPopup(false)}
         />
       )}
+          {loading && (
+    
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <img src="\Hourglass.gif" alt="Loading..." className="w-16 h-16" />
+        </div>
+
+      )}
 
       {/* Apply Popup */}
       {showPopup && (
@@ -248,6 +340,8 @@ export default function Jobs() {
               &#10005;
             </button>
             <h3 className="text-xl font-semibold mb-4">Take Photo & Upload Resume</h3>
+
+          
 
             <label className="block text-gray-700 font-semibold mb-1">Upload Resume:</label>
             <div className="flex items-center">
@@ -270,32 +364,47 @@ export default function Jobs() {
             </div>
 
             <label className="block text-gray-700 font-semibold mb-1">Upload Photo:</label>
-            <div className="flex items-center">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  setPhoto(file);
-                  setPhotoPreview(URL.createObjectURL(file));
-                  setPhotoName(file.name);
-                }}
-                className="mb-2 border rounded-md p-2"
-              />
-              <button
-                onClick={() => setPhotoPreviewVisible(true)}
-                className="ml-4 text-blue-600 hover:underline"
-              >
-                View
-              </button>
-            </div>
+            <div>
+            <video
+          ref={videoRef}
+          autoPlay
+          muted
+          style={{
+            width: '200px',
+            height: '150px',
+            border: '2px solid #4A90E2',
+            borderRadius: '5px',
+            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.3)',
+          }}
+        />
+        <button onClick={startCamera} className="text-indigo-600 mb-4">
+          Start Camera
+        </button>
+      
 
-            <button
-              onClick={handleApply}
-              className="bg-blue-600 text-white rounded-md px-4 py-2 mt-4"
-            >
-              {loading ? "Applying..." : "Submit Application"}
-            </button>
+      {cameraEnabled && (
+        <div>
+          <canvas ref={canvasRef} className="hidden"></canvas>
+          <button onClick={capturePhoto} className="text-blue-600">
+            Capture Photo
+          </button>
+        </div>
+      )}
+    </div>
+
+
+          <button
+             onClick={() => {
+              handleUpload();
+              setShowPopup(false)
+            }}
+            className={`bg-blue-600 text-white rounded-md px-4 py-2 mt-4 ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"}`}
+            disabled={loading} 
+            
+          >
+           {loading ? "Uploading..." : "Upload"}
+          </button>
+
           </div>
         </div>
       )}
@@ -307,21 +416,29 @@ export default function Jobs() {
             />
           )}
 
-      {/* Photo Preview */}
-      {photoPreviewVisible && (
-        <PhotoPreview
-          photoPreview={photoPreview}
-          onClose={() => setPhotoPreviewVisible(false)}
-        />
-      )}
 
       {/* Animation Popup */}
+      { editPreviewVisible && (
+      <EditExtractedData
+        extractedData={extractedData}
+        resumeUrl = {resumeUrl}
+        photoUrl = {photoUrl}
+        email = {candidateEmail}
+        jobId =  {selectedJob?.job_id}
+        onClose={() => setEditPreviewVisible(false)}
+        onSuccess={handleApplicationSuccess}
+        onFailure={handleApplicationFailure}
+      />
+      )}
       {animationVisible && (
         <AnimationPopup
           message={animationMessage}
           isSuccess={isSuccess}
         />
       )}
+
+
     </div>
   );
 }
+

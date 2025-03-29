@@ -14,7 +14,7 @@ export default function Home() {
  
   return (
     <div>
-            <ProctoringWidget setMatchStatus={setMatchStatus} />
+            {/* <ProctoringWidget setMatchStatus={setMatchStatus} /> */}
 
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
       <h1 className="text-4xl font-bold mb-6">Welcome to Interview Automation</h1>
