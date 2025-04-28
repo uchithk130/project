@@ -23,9 +23,9 @@ export async function POST(req) {
         },
       },
       TargetImage: {
-        Bytes: buffer, // Use the Bytes property to send the captured image
+        Bytes: buffer,
       },
-      SimilarityThreshold: 90, // Adjust this value as needed (0-100)
+      SimilarityThreshold: 90,
     };
 
     const command = new CompareFacesCommand(params);

@@ -60,10 +60,10 @@ export async function POST(req) {
       // Create email options
       const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: email, // Send email to the candidate's email
+        to: email, 
         subject: subject,
         text: textContent(name, job_title, Jobcompany),
-        html: htmlContent(name, job_title, Jobcompany), // Personalized HTML content
+        html: htmlContent(name, job_title, Jobcompany), 
       };
 
       // Send the email

@@ -286,7 +286,7 @@ export default function ManagerInterviewReports() {
               <th className="px-4 py-2">Application ID</th>
               <th className="px-4 py-2">Job ID / Title</th>
               <th className="px-4 py-2">Candidate ID / Name</th>
-              <th className="px-4 py-2">Overall Score</th>
+              {/* <th className="px-4 py-2">Overall Score</th> */}
               <th className="px-4 py-2">Avg Scores (T/B/P)</th>
               <th className="px-4 py-2">View Report</th>
               <th className="px-4 py-2">Action</th>
@@ -307,7 +307,7 @@ export default function ManagerInterviewReports() {
                     <div>{report.candidate_id}</div>
                     <div className="text-sm text-gray-600">{report.name}</div>
                   </td>
-                  <td className="px-4 py-2 text-center">{report.overall_score}</td>
+                  {/* <td className="px-4 py-2 text-center">{report.overall_score}</td> */}
                   <td className="px-4 py-2 text-center">
                     {avg.technical} / {avg.behavioral} / {avg.problemSolving}
                   </td>

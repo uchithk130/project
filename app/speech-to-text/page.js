@@ -156,14 +156,14 @@ export default function InterviewPage() {
     synthRef.current.speak(utterance);
   };
 
-  // Updated startListening: use final results only to trigger answer evaluation immediately.
+
   const startListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return alert("Speech recognition not supported!");
 
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
-    recognition.interimResults = false; // Only final transcript will be returned.
+    recognition.interimResults = false; 
     recognition.lang = "en-US";
 
     recognition.onstart = () => setIsListening(true);
@@ -242,11 +242,11 @@ export default function InterviewPage() {
                       )}
                     </div>
                     <p className="text-gray-800 mb-2">{item.answer}</p>
-                    {item.evaluation && (
+                    {/* {item.evaluation && (
                       <div className="mt-2 p-2 bg-yellow-50 rounded border border-yellow-100">
                         <p className="text-sm text-yellow-800">{item.evaluation.feedback}</p>
                       </div>
-                    )}
+                    )} */}
                   </div>
                 </div>
               ))}
